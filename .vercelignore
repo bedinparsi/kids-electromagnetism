@@ -1,0 +1,4 @@
+# Keep Vercel CLI uploads the same as the Git repo (see .gitignore)
+media
+handoffs
+electromagnetism/.tmp-test

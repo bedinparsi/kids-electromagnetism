@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# --- Electromagnetism Adventure: local-only files ---
+# Original kit photo: it contains GPS location data, so it stays on this computer
+media/
+# Temporary browser test harness and screenshots
+electromagnetism/.tmp-test/
+# Vercel CLI link data
+.vercel
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store
