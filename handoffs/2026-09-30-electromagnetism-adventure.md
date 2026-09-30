@@ -13,8 +13,12 @@ A kids' single-page app, plus pictures and circuit diagrams, that teaches electr
   - a current in a coil makes a magnet
   - a moving magnet makes electricity
 - It runs today: open `electromagnetism\index.html`. No build step, no dependencies, and it works from `file://`.
-- 6 of 8 planned tasks are done. Headless Edge checks pass: all 15 routes load with 0 JS errors, and all 6 simulators behave correctly.
-- Still to do (section 7): a visual re-check of 6 pictures, simulator polish, README, print test, and deleting `.tmp-test\`.
+- Published:
+  - code at https://github.com/bedinparsi/kids-electromagnetism (public, `main`)
+  - site at https://kids-electromagnetism.vercel.app
+  - Vercel isn't auto-deploying from GitHub yet (see section 2)
+- Tasks 1–6 and publishing are done. Headless Edge checks pass locally and on the live site: all 15 routes load with 0 JS errors. All 6 simulators behave correctly (checked locally).
+- Still to do (section 7): a visual re-check of 6 pictures, simulator polish, README, print test, connecting Vercel to GitHub, and deleting `.tmp-test\`.
 
 ## 1. User and request
 
@@ -41,6 +45,28 @@ A kids' single-page app, plus pictures and circuit diagrams, that teaches electr
 
 - Progress is saved in the browser's localStorage under the key `electromagnetism-adventure-v1`, on this computer only.
 - The harness drives Edge over CDP on port 9333 with a throwaway profile, so it never touches the user's saved progress.
+- To point the harness at the live site: `$env:BASE_URL='https://kids-electromagnetism.vercel.app/'; node .tmp-test/cdp-test.js routes`.
+
+### Git and deployment
+
+- **Repo:** https://github.com/bedinparsi/kids-electromagnetism (public), branch `main`.
+  - The workspace root is the repo root.
+  - The first commit is the user's own (`README.md` plus a Node `.gitignore`). The site commit sits on top of it.
+- **Kept out of git** (via `.gitignore`):
+  - `media/`: the iPhone photo contains GPS location data. Never commit it.
+  - `electromagnetism/.tmp-test/`
+  - `.vercel/`
+- **Vercel project:** `bedinparsis-projects/kids-electromagnetism`, live at https://kids-electromagnetism.vercel.app.
+  - The root `vercel.json` sets framework Other, no build step, and `outputDirectory: "electromagnetism"`.
+  - `.vercelignore` keeps CLI uploads the same as the repo.
+  - Checked: `/`, CSS, JS and images return 200. `/handoffs/…`, `/media/…`, `/.tmp-test/…` and `/vercel.json` return 404.
+- **Redeploy** from the repo root: `cmd /c "vercel.cmd deploy --prod --yes --no-color < NUL 2>&1"`.
+  - Always feed stdin from `NUL`. Otherwise the CLI can hang waiting on a prompt; `vercel project ls` did once.
+  - CLI v53.1.1, logged in as `bedinparsi`. Its default scope has one other project, `ai-deep-dive`; leave it alone.
+- **GitHub isn't connected to Vercel yet.** `vercel git connect` fails, most likely because the Vercel GitHub App has no access to this new repo.
+  - The user has to grant access: GitHub → Settings → Applications → Installed GitHub Apps → Vercel → Configure → Repository access → add `kids-electromagnetism`.
+  - Then run `cmd /c "vercel.cmd git connect --no-color < NUL 2>&1"`, or use Vercel dashboard → Project → Settings → Git.
+  - Until then, every change needs commit, push, and a CLI redeploy.
 
 ## 3. Task status
 
@@ -54,12 +80,16 @@ A kids' single-page app, plus pictures and circuit diagrams, that teaches electr
 | 6 | App logic in `js/app.js`: router, saving, quiz, certificate | Done |
 | 7 | Verification in headless Edge | Functional checks done. Visual polish and print not done |
 | 8 | `README.md`, and deleting temp files | Not started |
+| 9 | Publish: push to GitHub and deploy to Vercel | Done: commit `b0026af` pushed and the site is live. Vercel auto-deploy from GitHub is not connected yet |
 
 ## 4. File map
 
 ```
-physics/
-  media/IMG_2697.jpeg              the user's kit photo (3.1 MB)
+physics/                           git repo root = Vercel project root
+  README.md                        the user's (from GitHub): extend it, keep their text
+  vercel.json                      Vercel: framework Other, outputDirectory "electromagnetism"
+  .gitignore, .vercelignore        keep media/, .tmp-test/ and .vercel/ out of git and Vercel
+  media/IMG_2697.jpeg              the user's kit photo (3.1 MB; has GPS data, so not in git)
   handoffs/                        this file
   electromagnetism/
     index.html            47 lines  SPA shell; loads 7 classic scripts in order
@@ -73,7 +103,7 @@ physics/
     js/app.js            477        router, rendering, saving, quiz, certificate
     tools/build-images.js  66       exports images/*.svg (+ png/)
     images/                         18 SVGs (00-17) + png/ (18 PNGs): a static export
-    .tmp-test/                      TEMPORARY: cdp-test.js (214 lines) + shots/ (12 PNGs)
+    .tmp-test/                      TEMPORARY, git-ignored: cdp-test.js (214 lines) + shots/ (12 PNGs)
 ```
 
 Reading strategy: don't re-read whole files. Use `grep_search` for the id you need (a scene id such as `'em-build'`, `sims.generator =`, or a notebook key), then `read_file` with `offset`/`limit`. To check a picture, export it with `--png` and open the PNG with `read_file`.
@@ -229,7 +259,8 @@ Tested in headless Edge 154 on `file://`, with `.tmp-test/cdp-test.js`.
      - Fix: a taller viewBox (about 320) and/or smaller loops, then move the arrows.
    - `sims.oersted`: the dashed current line is drawn over the compass even when the wire is underneath. Dim it (opacity about 0.35) when `st.under` is set.
    - Confirm the dash direction: when not swapped, the dashes should move up the screen and the needle should swing left.
-3. **Write the README** at `electromagnetism\README.md`. It was in the agreed plan, and the user asked for documentation. Keep it short. Cover:
+3. **Extend the root `README.md`.** It came from GitHub with the user's two-line description; keep their text and add to it. The README was in the agreed plan, and the user asked for documentation. Keep it short. Cover:
+   - the live link, https://kids-electromagnetism.vercel.app
    - how to open the app: double-click, or the optional server with `--bind 127.0.0.1`
    - the folder map
    - printing: each page has a "Print this page" button, and the certificate prints on its own
@@ -237,7 +268,11 @@ Tested in headless Edge 154 on `file://`, with `.tmp-test/cdp-test.js`.
    - a 5-line summary for grown-ups with the safety headline: 6 V only, the 5-second rule, magnets away from pacemakers
 4. **Test printing.** Use CDP `Page.printToPDF` on `#/mission/3` and `#/certificate`. Render the pages to PNG with PyMuPDF (`fitz` is installed) and look at them.
 5. **Optional:** a keyboard-only pass (Tab to the hold buttons and press Space; the generator's arrow keys) and touch emulation.
-6. **Clean up.** Delete `electromagnetism\.tmp-test\` (the harness and screenshots). Then give the user a short summary that includes how to run the app.
+6. **Connect Vercel to GitHub**, once the user has given the Vercel GitHub App access (section 2). Then check that a push to `main` starts a production deployment.
+7. **Clean up.** Delete `electromagnetism\.tmp-test\` (the harness and screenshots). It's git-ignored, so this is local only.
+   - Commit and push the finished work.
+   - Redeploy if Git still isn't connected.
+   - Give the user a short summary with the live link.
 
 ## 8. Gotchas
 
